@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="real_estate_menu_root" name="Real Estate" sequence="30">
+        <menuitem id="real_estate_menu_categ1" name="Advertisement" sequence="35">
+            <menuitem id="real_estate_action1" name="Test Menu Action 1"  action="real_estate_action" sequence="11"/>
+<!--            <menuitem id="real_estate_action2" name="Test Menu Action 2" action="" sequence="35"/>-->
+        </menuitem>
+<!--        <menuitem id="real_estate_menu_categ2" name="Configuration" sequence="43">-->
+<!--            <menuitem id="real_estate_action5" name="Test Menu Action 1" action="" sequence="30"/>-->
+<!--            <menuitem id="real_estate_action6" name="Test Menu Action 1" action="" sequence="22"/>-->
+<!--        </menuitem>-->
+
+    </menuitem>
+</odoo>
