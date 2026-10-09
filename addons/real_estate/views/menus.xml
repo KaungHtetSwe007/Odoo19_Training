@@ -2,13 +2,13 @@
 <odoo>
     <menuitem id="real_estate_menu_root" name="Real Estate" sequence="30">
         <menuitem id="real_estate_menu_categ1" name="Advertisement" sequence="35">
-            <menuitem id="real_estate_action1" name="Test Menu Action 1"  action="real_estate_action" sequence="11"/>
-<!--            <menuitem id="real_estate_action2" name="Test Menu Action 2" action="" sequence="35"/>-->
+            <menuitem id="properties_menu" name="Properties"  action="real_estate_action" sequence="11"/>
+            <menuitem id="offers_menu" name="Offers" action="real_estate_offers_action" sequence="35"/>
         </menuitem>
-<!--        <menuitem id="real_estate_menu_categ2" name="Configuration" sequence="43">-->
-<!--            <menuitem id="real_estate_action5" name="Test Menu Action 1" action="" sequence="30"/>-->
-<!--            <menuitem id="real_estate_action6" name="Test Menu Action 1" action="" sequence="22"/>-->
-<!--        </menuitem>-->
+        <menuitem id="real_estate_menu_categ2" name="Configuration" sequence="43">
+            <menuitem id="property_menu" name="Property Types" action="real_estate_types_action" sequence="21"/>
+            <menuitem id="tags_menu" name="Property Tags" action="real_estate_tags_action" sequence="22"/>
+        </menuitem>
 
     </menuitem>
 </odoo>

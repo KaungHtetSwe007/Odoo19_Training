@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Step 1: Module Category -->
+    <record
+        id="module_category_real_estate"
+        model="ir.module.category"
+    >
+        <field name="name">Real Estate</field>
+        <field name="sequence">30</field>
+    </record>
+
+    <!-- Step 2: Odoo 19 Group Privilege -->
+    <record
+        id="groups_privilege_real_estate"
+        model="res.groups.privilege"
+    >
+        <field name="name">Real Estate</field>
+        <field name="sequence">30</field>
+
+        <field
+            name="category_id"
+            ref="module_category_real_estate"
+        />
+    </record>
+
+    <!-- Step 3: Real Estate User Group -->
+    <record
+        id="group_real_estate_user"
+        model="res.groups"
+    >
+        <field name="name">Real Estate User</field>
+        <field name="sequence">10</field>
+
+        <field
+            name="privilege_id"
+            ref="groups_privilege_real_estate"
+        />
+
+        <field
+            name="implied_ids"
+            eval="[(4, ref('base.group_user'))]"
+        />
+    </record>
+
+    <!-- Step 4: Real Estate Manager Group -->
+    <record
+        id="group_real_estate_manager"
+        model="res.groups"
+    >
+        <field name="name">Real Estate Manager</field>
+        <field name="sequence">20</field>
+
+        <field
+            name="privilege_id"
+            ref="groups_privilege_real_estate"
+        />
+
+        <field
+            name="implied_ids"
+            eval="[(4, ref('group_real_estate_user'))]"
+        />
+    </record>
+
+</odoo>
