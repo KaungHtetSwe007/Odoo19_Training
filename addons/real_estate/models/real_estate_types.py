@@ -9,6 +9,11 @@ class RealEstateTypes(models.Model):
         'real.estate.property',
         string='Property',
     )
+    code = fields.Char(
+        string='Code',
+        required=True,
+        copy=False,
+    )
     active = fields.Boolean(default=True)
     _unique_name = models.Constraint(
         'UNIQUE(name)',

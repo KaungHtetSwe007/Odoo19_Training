@@ -16,6 +16,11 @@ class RealEstateProperty(models.Model):
         sanitize=True,
         required=True,
     )
+    code = fields.Char(string='ID Prefix')
+    _unique_property_name = models.Constraint(
+        'UNIQUE(name)',
+        'Property ID must be unique',
+    )
     salesperson_id = fields.Many2one(
         'res.users',
         string='Salesperson',
@@ -123,7 +128,7 @@ class RealEstateProperty(models.Model):
         'property_id',
         string='Offer',
     )
-
+    active = fields.Boolean(default=True)
     def action_confirm(self):
         for property_record in self:
             if property_record.state != 'draft':
@@ -154,12 +159,42 @@ class RealEstateProperty(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        for values in vals_list:
-            if values.get('name','New') == 'New':
-                property_number = (self.env['ir.sequence'].next_by_code('real.estate.property'))
+        sequence = self.env.ref(
+            'real_estate.seq_real_estate_property',
+            raise_if_not_found=False,
+        )
 
-                if not property_number:
-                    raise UserError('Error message')
-                values['name']=property_number
+        if not sequence:
+            raise UserError(
+                "Property sequence not found. "
+                "Please check the sequence XML file and module name."
+            )
+
+        for values in vals_list:
+            if values.get('name', 'New') != 'New':
+                continue
+
+            type_id = values.get('property_type_id')
+            property_type = self.env[
+                'real.estate.types'
+            ].browse(type_id).exists() if type_id else False
+
+            if not property_type or not property_type.code:
+                raise UserError(
+                    "Please select a Property Type with a valid code."
+                )
+
+            number = sequence.next_by_id()
+
+            if not number:
+                raise UserError(
+                    "Unable to generate Property ID."
+                )
+
+            values['name'] = (
+                f"{property_type.code.strip().upper()}/{number}"
+            )
+
         return super().create(vals_list)
+
 
