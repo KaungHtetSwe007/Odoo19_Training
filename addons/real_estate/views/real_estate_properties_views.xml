@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="real_estate_view_list" model="ir.ui.view">
+        <field name="name">real.estate.view.list</field>
+        <field name="model">real.estate.property</field>
+        <field name="arch" type="xml">
+            <list string="List Title">
+                <field name="name" readonly="1"/>
+                <field name="property_type_id"/>
+                <field name="tags_id"
+                       widget="many2many_tags"
+                       options="{'color_field': 'color'}"/>
+                <field name="postal_code"/>
+                <field name="bedrooms"/>
+                <field name="living_areas"/>
+                <field name="expected_price"/>
+                <field name="best_offer"/>
+                <field name="selling_price"/>
+                <field name="state"
+                       widget="badge"
+                       decoration-success="state=='confirmed'"
+                       decoration-danger="state=='rejected'"
+                       decoration-primary="state=='offer_accepted'"
+                       decoration-info="state=='offer_received'"
+                       decoration-warning="state=='sold'"
+                       decoration-muted="state=='draft'"
+                />
+            </list>
+        </field>
+    </record>
+
+    <record id="real_estate_view_form" model="ir.ui.view">
+        <field name="name">real.estate.view.form</field>
+        <field name="model">real.estate.property</field>
+        <field name="arch" type="xml">
+            <form string="Form Title">
+                <header>
+                    <button
+                            name="action_confirm"
+                            type="object"
+                            string="Confirm"
+                            class="btn-primary"
+                            invisible="state != 'draft'"
+                            confirm="Are you sure to confirm this property?"
+                    />
+                    <button
+                            name="action_reset_to_draft"
+                            type="object"
+                            string="Reset to Draft"
+                            class="btn-warning"
+                            invisible="state == 'draft'"
+                    />
+                    <field
+                            name="state"
+                            widget="statusbar"
+                            statusbar_visible="draft,confirmed,offer_received,offer_accepted,sold,rejected"
+                    />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <group>
+                                <field name="name" readonly="1"/>
+                            </group>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="property_type_id" readonly="state != 'draft'"/>
+                            <field name="tags_id"
+                                   widget="many2many_tags"
+                                   options="{'color_field': 'color'}"
+                                   readonly="state != 'draft'"
+                            />
+
+                        </group>
+                        <group>
+                            <field name="expected_price" readonly="state != 'draft'"/>
+                            <field name="best_offer" readonly="1"/>
+                            <field name="selling_price" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <group>
+                                <group string="General Information">
+                                    <field name="discription" readonly="state != 'draft'"/>
+                                    <field name="bedrooms" readonly="state != 'draft'"/>
+                                    <field name="living_areas" readonly="state != 'draft'"/>
+                                    <field name="postal_code" readonly="state != 'draft'"/>
+                                    <field name="available_from" readonly="state != 'draft'"/>
+                                </group>
+                            </group>
+                            <!-- Invisible expressions အတွက် view ထဲရှိရမည့် fields -->
+                            <field name="has_garden" invisible="1"/>
+                            <field name="has_grass" invisible="1"/>
+                            <field name="has_garage" invisible="1"/>
+                            <field name="has_gym" invisible="1"/>
+                            <field name="has_swimming_pool" invisible="1"/>
+
+                            <group string="Garden Information"
+                                   invisible="not has_garden">
+                                <group>
+                                    <field name="garden_size"/>
+                                    <field name="garden_orientation"/>
+                                </group>
+                            </group>
+                            <group string="Grass Information"
+                                   invisible="not has_grass">
+                                <group>
+                                    <field name="grass_size"/>
+                                </group>
+                            </group>
+                            <group string="Garage Information"
+                                   invisible="not has_garage">
+                                <group>
+                                    <field name="garage_size"/>
+                                    <field name="garage_capacity"/>
+                                </group>
+                            </group>
+
+                            <group string="Gym Information"
+                                   invisible="not has_gym">
+                                <group>
+                                    <field name="gym_size"/>
+                                </group>
+                            </group>
+
+                            <group string="Swimming Pool Information"
+                                   invisible="not has_swimming_pool">
+                                <group>
+                                    <field name="pool_length"/>
+                                    <field name="pool_width"/>
+                                    <field name="pool_depth"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Offers">
+                            <field name="offer_ids">
+                                <list string="Offers">
+                                    <field name="name"/>
+                                    <field name="property_id"/>
+                                    <field name="partner_id"/>
+                                    <field name="price"/>
+                                    <field name="validity"/>
+                                    <field name="status"/>
+                                    <field name="currency_id"/>
+                                    <field name="date_deadline"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Other Information">
+                            <group>
+                                <field name="salesperson_id"/>
+                                <field name="buyer_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+
+    <record id="real_estate_action" model="ir.actions.act_window">
+        <field name="name">Real Estate</field>
+        <field name="res_model">real.estate.property</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first record
+            </p>
+        </field>
+    </record>
+</odoo>
