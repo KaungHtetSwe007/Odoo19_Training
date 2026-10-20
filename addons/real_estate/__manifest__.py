@@ -6,6 +6,7 @@
     'version': '19.0.0',
     'depends': ['base','web', 'mail'],
     'data': [
+        'data/real_estate_offer_sequence.xml',
         'security/real_estate_security.xml',
         'security/ir.model.access.csv',
         'data/real_estate_sequence.xml',

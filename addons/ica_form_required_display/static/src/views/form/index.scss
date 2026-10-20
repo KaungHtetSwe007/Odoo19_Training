@@ -1,0 +1,8 @@
+.o_field_invalid:not(:focus-within).o_form_label::after{
+  content:" *";
+  color: red;
+}
+
+.o_field_invalid:not(:focus-within).o_form_label{
+  color : black;
+}

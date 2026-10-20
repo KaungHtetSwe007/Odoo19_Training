@@ -1,5 +1,7 @@
 from odoo.exceptions import UserError
 from odoo import api, fields, models
+
+
 class RealEstateProperty(models.Model):
     _name = 'real.estate.property'
     _description = 'New Model Description'
@@ -24,6 +26,8 @@ class RealEstateProperty(models.Model):
     salesperson_id = fields.Many2one(
         'res.users',
         string='Salesperson',
+        default=lambda self: self.env.user,
+        tracking=True,
     )
     buyer_id = fields.Many2one(
         'res.partner',
@@ -40,20 +44,25 @@ class RealEstateProperty(models.Model):
         ('rejected', 'Rejected'),
     ],
 
-        string = 'Status',
+        string='Status',
         default='draft',
         required=True,
         copy=False,
         readonly=True,
         tracking=True,
     )
-
+    offer = fields.Boolean(
+        string='Offer',
+    )
+    reject = fields.Boolean(
+        string='Reject',
+    )
     property_type_id = fields.Many2one(
         'real.estate.types',
         string='Property Type',
         required=True,
         ondelete='cascade',
-        tracking = True,
+        tracking=True,
     )
     tags_id = fields.Many2many(
         'real.estate.tags',
@@ -62,29 +71,30 @@ class RealEstateProperty(models.Model):
         string='Tags',
     )
     has_garden = fields.Boolean(
-        compute= '_compute_feature_flags',
+        compute='_compute_feature_flags',
     )
     has_grass = fields.Boolean(
-        compute= '_compute_feature_flags',
+        compute='_compute_feature_flags',
     )
     has_garage = fields.Boolean(
-        compute= '_compute_feature_flags',
+        compute='_compute_feature_flags',
     )
     has_gym = fields.Boolean(
-        compute= '_compute_feature_flags',
+        compute='_compute_feature_flags',
     )
     has_swimming_pool = fields.Boolean(
-        compute= '_compute_feature_flags',
+        compute='_compute_feature_flags',
     )
     garden_size = fields.Float(
         string='Garden Size'
     )
     garden_orientation = fields.Selection([
-            ('north','North'),
-            ('south','South'),
-            ('east','East'),
-            ('west','West'),
-        ]
+        ('north', 'North'),
+        ('south', 'South'),
+        ('east', 'East'),
+        
+        ('west', 'West'),
+    ]
     )
     grass_size = fields.Float(
         string='Grass Field Size'
@@ -113,14 +123,20 @@ class RealEstateProperty(models.Model):
         string='Living Areas(sqm)',
         required=True,
     )
-    available_from = fields.Datetime(string='Available From', required=True,readonly="state != 'draft'",)
+    available_from = fields.Datetime(string='Available From', required=True, readonly="state != 'draft'", )
     currency_id = fields.Many2one(
         'res.currency',
         string='Currency',
         default=lambda self: self.env.company.currency_id,
     )
-    expected_price = fields.Monetary(string='Expected Price', required=True,tracking=True)
-    best_offer = fields.Monetary(string='Best Offer', readonly=True, tracking=True)
+    expected_price = fields.Monetary(string='Expected Price', required=True, tracking=True)
+    best_offer = fields.Monetary(
+        string='Best Offer',
+        readonly=True,
+        tracking=True,
+        compute= '_compute_best_offer',
+        store=True,
+    )
     selling_price = fields.Monetary(string='Selling Price', readonly=True, tracking=True)
 
     offer_ids = fields.One2many(
@@ -129,6 +145,7 @@ class RealEstateProperty(models.Model):
         string='Offer',
     )
     active = fields.Boolean(default=True)
+
     def action_confirm(self):
         for property_record in self:
             if property_record.state != 'draft':
@@ -141,21 +158,22 @@ class RealEstateProperty(models.Model):
 
     def action_reset_to_draft(self):
         for property_record in self:
+            if (property_record.state != 'confirmed' or property_record.offer_ids):
+                raise UserError('စောက်တောသားတေ Reset မရဘူးကွ ဟားဟားဟား')
             property_record.state = 'draft'
         return True
 
-
-    @api.depends('tags_id','tags_id.code')
+    @api.depends('tags_id', 'tags_id.code')
     def _compute_feature_flags(self):
-            for property_record in self:
-                selected_codes = set(
-                    property_record.tags_id.mapped('code')
-                )
-                property_record.has_garden = ('garden' in selected_codes)
-                property_record.has_grass = ('grass' in selected_codes)
-                property_record.has_garage = ('garage' in selected_codes)
-                property_record.has_gym = ('gym' in selected_codes)
-                property_record.has_swimming_pool = ('swimming_pool' in selected_codes)
+        for property_record in self:
+            selected_codes = set(
+                property_record.tags_id.mapped('code')
+            )
+            property_record.has_garden = ('garden' in selected_codes)
+            property_record.has_grass = ('grass' in selected_codes)
+            property_record.has_garage = ('garage' in selected_codes)
+            property_record.has_gym = ('gym' in selected_codes)
+            property_record.has_swimming_pool = ('swimming_pool' in selected_codes)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -196,5 +214,19 @@ class RealEstateProperty(models.Model):
             )
 
         return super().create(vals_list)
+    @api.depends(
+        'offer_ids',
+        'offer_ids.price',
+        'offer_ids.status',
+    )
+    def _compute_best_offer(self):
+        for property_record in self:
+            eligible_offer = property_record.offer_ids.filtered(
+                lambda offer: offer.status in (
+                    'pending','accepted',
+                )
+            )
 
+            prices = eligible_offer.mapped('price')
 
+            property_record.best_offer = max(prices, default=0.0)

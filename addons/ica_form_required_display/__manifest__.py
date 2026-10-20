@@ -1,0 +1,15 @@
+{
+    'name': 'Form Required Display',
+    'summary': 'Improve required field visual feedback on forms.',
+    'version': '19.0.1.0.0',
+    'category': 'Technical',
+    'author': 'Agga, IdeaCode Academy',
+    'maintainer': 'IdeaCode Academy',
+    'website': 'https://www.linkedin.com/company/ideacode-academy',
+    'support': 'hanzawnyineonline@gmail.com',
+    'depends': ['web'],
+    'assets': {'web.assets_backend': ['ica_form_required_display/static/src/**/*']},
+    'images': ['static/description/banner.jpg'],
+    'license': 'LGPL-3',
+    'installable': True,
+}

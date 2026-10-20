@@ -1,5 +1,8 @@
 from datetime import timedelta
 from odoo import fields, models, api
+from odoo.exceptions import UserError
+
+
 class RealEstateDescription(models.Model):
     _name = 'real.estate.offers'
     _description = 'New Model Offers'
@@ -8,7 +11,14 @@ class RealEstateDescription(models.Model):
         'mail.thread',
         'mail.activity.mixin',
     ]
-    name = fields.Char(string='Offer ID', required=True,tracking=True)
+    name = fields.Char(
+        string='Offer ID',
+        default= 'New',
+        required=True,
+        tracking=True,
+        readonly= True,
+        copy=False
+    )
     property_id = fields.Many2one(
         'real.estate.property',
         string='Property',
@@ -45,6 +55,7 @@ class RealEstateDescription(models.Model):
          ('pending','Pending'),
          ('accepted','Accepted'),
          ('rejected','Rejected'),
+         ('expired', 'Expired'),
          ],
         string='Status',
         default='pending',
@@ -63,6 +74,14 @@ class RealEstateDescription(models.Model):
         'CHECK(validity >= 0)',
         'The validity cannot be negative.',
     )
+
+    @api.onchange('property_id')
+    def _onchange_property_id(self):
+        """Use the selected property's currency for this offer in the form."""
+        if self.property_id:
+            self.currency_id = self.property_id.currency_id
+        else:
+            self.currency_id = self.env.company.currency_id
 
     @api.depends('create_date', 'validity')
     def _compute_date_deadline(self):
@@ -91,3 +110,78 @@ class RealEstateDescription(models.Model):
             offer.validity = (
                     offer.date_deadline - start_date
             ).days
+
+    def action_accept(self):
+        for offer in self:
+            if offer.status != 'pending':
+                raise UserError(
+                    'Only pending offers can accept.'
+                )
+            today = fields.Date.context_today(offer)
+            if offer.date_deadline and offer.date_deadline < today:
+                raise UserError(
+                    'Only pending offers can accept.'
+                )
+            accepted_offer = self.env['real.estate.offers'].search(
+                [
+                    ('property_id', '=', offer.property_id.id),
+                    ('status', '=', 'accepted'),
+                ], limit=1
+            )
+            if accepted_offer:
+                raise UserError(
+                    'Only pending offers can accept.'
+                )
+            if offer.property_id.state not in(
+                'confirmed', 'offer_received'
+            ):
+                raise UserError('Only pending offers can accept.')
+            other_pending_offer = self.env['real.estate.offers'].search(
+                [
+                    ('property_id', '=', offer.property_id.id),
+                    ('status', '=', 'pending'),
+                    ('id', '!=', offer.id),
+                ]
+            )
+            other_pending_offer.write({
+                'status': 'rejected',
+            })
+            offer.status = 'accepted'
+            offer.property_id.write({
+                'buyer_id': offer.partner_id.id,
+                'selling_price': offer.price,
+                'state' : 'offer_accepted'
+            })
+        return True
+    def action_reject(self):
+        for offer in self:
+            if offer.status != 'pending':
+                raise UserError('Only pending offers can reject.')
+
+            offer.status = 'rejected'
+            offer.property_id.write({
+                'state' : 'rejected'
+            })
+        return True
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+           if vals.get('name', 'New') == 'New':
+                vals['name'] = (
+                    self.env['ir.sequence'].next_by_code('real.estate.offer') or 'New'
+                )
+        return super().create(vals_list)
+    @api.model
+    def _corn_expire_pending_offers(self):
+        today = fields.Date.context_today(self)
+        expired_offers = self.env['real.estate.offers'].search(
+            [
+                ('status', '=' ,'pending'),
+                ('date_deadline', '<', today),
+
+            ]
+        )
+        expired_offers.write({
+            'status': 'expired',
+        })
+        return True
